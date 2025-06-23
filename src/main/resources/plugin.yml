@@ -9,3 +9,5 @@ folia-supported: true
 
 depend:
   - BukkitOfUtils
+
+api-version: '1.21'

@@ -1,0 +1,13 @@
+# Allow different types of PvP in the game
+allow:
+  crystal-pvp: false
+  bed-pvp: false
+  anchor-pvp: false
+
+# Item configurations.
+items:
+  # Drop extra on ground.
+  drop-excess: true
+  totems:
+    material: TOTEM_OF_UNDYING
+    max-amount: 4

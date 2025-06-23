@@ -1,5 +1,8 @@
-# ExampleProject - BukkitOfUtils Example Project
-This is an example project for using BukkitOfUtils in your projects.
+# GeneralPVP
+A plugin for gernal use on PVP servers.
 
-## Wiki
-You can find the wiki [**here**](https://wiki.plas.host/bukkitofutils).
+## Features
+- Anti Crystal PVP (configurable)
+- Anti Bed PVP (configurable)
+- Anti Anchor PVP (configurable)
+- Max Items (configurable)
