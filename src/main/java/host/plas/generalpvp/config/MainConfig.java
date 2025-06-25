@@ -14,7 +14,14 @@ public class MainConfig extends SimpleConfiguration {
 
     @Override
     public void init() {
+        isAllowCrystalPVP();
+        isAllowBedPVP();
+        isAllowAnchorPVP();
 
+        isDropExcess();
+        getItemConfigurations();
+
+        getBypassItemCheckPermission();
     }
 
     public boolean isAllowCrystalPVP() {
@@ -62,5 +69,11 @@ public class MainConfig extends SimpleConfiguration {
         });
 
         return items;
+    }
+
+    public String getBypassItemCheckPermission() {
+        reloadResource();
+
+        return getOrSetDefault("bypass.item-check.permission", "generalpvp.bypass.item-check");
     }
 }

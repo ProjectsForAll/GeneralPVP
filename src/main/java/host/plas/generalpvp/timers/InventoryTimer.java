@@ -7,7 +7,7 @@ import org.bukkit.Bukkit;
 
 public class InventoryTimer extends BaseRunnable {
     public InventoryTimer() {
-        super(0, 1);
+        super(0, 5);
     }
 
     @Override

@@ -1,14 +1,13 @@
 package host.plas.generalpvp.config.bits;
 
 import gg.drak.thebase.objects.Identifiable;
-import host.plas.bou.scheduling.TaskManager;
 import host.plas.generalpvp.GeneralPVP;
 import host.plas.generalpvp.items.ItemManager;
-import host.plas.generalpvp.items.StickyItem;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +31,9 @@ public class ConfiguredItem implements Identifiable {
     }
 
     public boolean checkAndDrop(Player player) {
+        if (player == null) return false;
+        if (player.hasPermission(GeneralPVP.getMainConfig().getBypassItemCheckPermission())) return true;
+
         PlayerInventory inventory = player.getInventory();
 
         ConcurrentSkipListMap<Integer, ItemStack> toSet = new ConcurrentSkipListMap<>();
@@ -98,5 +100,36 @@ public class ConfiguredItem implements Identifiable {
 //            item.setCanMobPickup(true);
 //            item.setCanPlayerPickup(true);
 //        }, 20L * 2); // 2-second delay
+    }
+
+    public int getCurrentAmount(HumanEntity player) {
+        PlayerInventory inventory = player.getInventory();
+        AtomicInteger amount = new AtomicInteger(0);
+
+        inventory.all(this.getMaterial()).forEach((slot, item) -> {
+            if (item == null || item.getType() != material) return;
+
+            int currentAmount = item.getAmount();
+            amount.addAndGet(currentAmount);
+        });
+
+        return amount.get();
+    }
+
+    public boolean isCanAdd(HumanEntity player, ItemStack stack) {
+        if (player == null) return false;
+        if (player.hasPermission(GeneralPVP.getMainConfig().getBypassItemCheckPermission())) return true;
+
+        if (stack == null || stack.getType() == Material.AIR) return true;
+        if (stack.getType() != this.getMaterial()) return true;
+
+        int currentAmount = this.getCurrentAmount(player);
+        int newAmount = currentAmount + stack.getAmount();
+
+        return newAmount <= this.getMaxAmount();
+    }
+
+    public boolean isCanAdd(HumanEntity player, Item item) {
+        return this.isCanAdd(player, item.getItemStack());
     }
 }

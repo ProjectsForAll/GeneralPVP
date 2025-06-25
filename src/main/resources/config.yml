@@ -4,6 +4,13 @@ allow:
   bed-pvp: false
   anchor-pvp: false
 
+# Bypass configurations.
+bypass:
+  # Bypass item checks.
+  item-check:
+    # Permission to bypass item checks.
+    permission: "generalpvp.bypass.item-check"
+
 # Item configurations.
 items:
   # Drop extra on ground.
