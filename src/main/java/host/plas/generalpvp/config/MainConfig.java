@@ -19,9 +19,12 @@ public class MainConfig extends SimpleConfiguration {
         isAllowAnchorPVP();
 
         isDropExcess();
+        isAllGoldenApplesSame();
         getItemConfigurations();
 
         getBypassItemCheckPermission();
+
+        getPearlCooldown();
     }
 
     public boolean isAllowCrystalPVP() {
@@ -48,6 +51,12 @@ public class MainConfig extends SimpleConfiguration {
         return getOrSetDefault("items.drop-excess", true);
     }
 
+    public boolean isAllGoldenApplesSame() {
+        reloadResource();
+
+        return getOrSetDefault("items.all-golden-apples-similar", true);
+    }
+
     public ConcurrentSkipListSet<ConfiguredItem> getItemConfigurations() {
         reloadResource();
 
@@ -55,6 +64,7 @@ public class MainConfig extends SimpleConfiguration {
 
         singleLayerKeySet("items").forEach(key -> {
             if (key.equals("drop-excess")) return; // Skip the drop-excess key
+            if (key.equals("all-golden-apples-similar")) return; // Skip the all-golden-apples-similar key
 
             String identifier = key;
             String materialName = getOrSetDefault("items." + key + ".material", "STONE");
@@ -75,5 +85,11 @@ public class MainConfig extends SimpleConfiguration {
         reloadResource();
 
         return getOrSetDefault("bypass.item-check.permission", "generalpvp.bypass.item-check");
+    }
+
+    public long getPearlCooldown() {
+        reloadResource();
+
+        return getOrSetDefault("cooldowns.pearl", 20 * 15L); // Default to 5 seconds
     }
 }

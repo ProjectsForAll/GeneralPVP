@@ -40,30 +40,82 @@ public class ConfiguredItem implements Identifiable {
 
         AtomicBoolean dropped = new AtomicBoolean(false);
         AtomicInteger amount = new AtomicInteger(0);
-        inventory.all(this.getMaterial()).forEach((slot, item) -> {
-            if (item == null || item.getType() != material) return;
 
-            int beforeAmount = amount.get();
-            int currentAmount = item.getAmount();
-            int newAmount = beforeAmount + currentAmount;
+        if ((this.getMaterial() == Material.ENCHANTED_GOLDEN_APPLE || this.getMaterial() == Material.GOLDEN_APPLE) && GeneralPVP.getMainConfig().isAllGoldenApplesSame()) {
+            inventory.all(Material.ENCHANTED_GOLDEN_APPLE).forEach((slot, item) -> {
+                if (item == null || item.getType() != material) return;
 
-            if (newAmount > this.getMaxAmount()) {
-                int excessAmount = newAmount - this.getMaxAmount();
-                int keepAmount = currentAmount - excessAmount;
+                int beforeAmount = amount.get();
+                int currentAmount = item.getAmount();
+                int newAmount = beforeAmount + currentAmount;
 
-                handleDropExcess(player, item, newAmount - maxAmount);
-                if (keepAmount > 0) {
-                    item.setAmount(keepAmount);
-                    toSet.put(slot, item);
+                if (newAmount > this.getMaxAmount()) {
+                    int excessAmount = newAmount - this.getMaxAmount();
+                    int keepAmount = currentAmount - excessAmount;
+
+                    handleDropExcess(player, item, newAmount - maxAmount);
+                    if (keepAmount > 0) {
+                        item.setAmount(keepAmount);
+                        toSet.put(slot, item);
+                    } else {
+                        toSet.put(slot, new ItemStack(Material.AIR));
+                    }
+
+                    dropped.set(true);
                 } else {
-                    toSet.put(slot, new ItemStack(Material.AIR));
+                    amount.set(newAmount);
                 }
+            });
+            inventory.all(Material.GOLDEN_APPLE).forEach((slot, item) -> {
+                if (item == null || item.getType() != material) return;
 
-                dropped.set(true);
-            } else {
-                amount.set(newAmount);
-            }
-        });
+                int beforeAmount = amount.get();
+                int currentAmount = item.getAmount();
+                int newAmount = beforeAmount + currentAmount;
+
+                if (newAmount > this.getMaxAmount()) {
+                    int excessAmount = newAmount - this.getMaxAmount();
+                    int keepAmount = currentAmount - excessAmount;
+
+                    handleDropExcess(player, item, newAmount - maxAmount);
+                    if (keepAmount > 0) {
+                        item.setAmount(keepAmount);
+                        toSet.put(slot, item);
+                    } else {
+                        toSet.put(slot, new ItemStack(Material.AIR));
+                    }
+
+                    dropped.set(true);
+                } else {
+                    amount.set(newAmount);
+                }
+            });
+        } else {
+            inventory.all(this.getMaterial()).forEach((slot, item) -> {
+                if (item == null || item.getType() != material) return;
+
+                int beforeAmount = amount.get();
+                int currentAmount = item.getAmount();
+                int newAmount = beforeAmount + currentAmount;
+
+                if (newAmount > this.getMaxAmount()) {
+                    int excessAmount = newAmount - this.getMaxAmount();
+                    int keepAmount = currentAmount - excessAmount;
+
+                    handleDropExcess(player, item, newAmount - maxAmount);
+                    if (keepAmount > 0) {
+                        item.setAmount(keepAmount);
+                        toSet.put(slot, item);
+                    } else {
+                        toSet.put(slot, new ItemStack(Material.AIR));
+                    }
+
+                    dropped.set(true);
+                } else {
+                    amount.set(newAmount);
+                }
+            });
+        }
 
         if (! toSet.isEmpty()) {
             toSet.forEach((slot, item) -> {
@@ -74,6 +126,7 @@ public class ConfiguredItem implements Identifiable {
                 }
             });
         }
+
 
         return dropped.get();
     }

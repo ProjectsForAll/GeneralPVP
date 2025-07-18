@@ -11,10 +11,27 @@ bypass:
     # Permission to bypass item checks.
     permission: "generalpvp.bypass.item-check"
 
+# Cooldown configurations.
+cooldowns:
+  # Minimum time in ticks between pearl throws.
+  pearl: 300 # 15 seconds
+
 # Item configurations.
 items:
   # Drop extra on ground.
   drop-excess: true
+  # If ENCHANTED_GOLDEN_APPLE should be treated like GOLDEN_APPLE.
+  # If true, just put the material as GOLDEN_APPLE.
+  all-golden-apples-similar: true
   totems:
     material: TOTEM_OF_UNDYING
-    max-amount: 4
+    max-amount: 1
+  pearls:
+    material: ENDER_PEARL
+    max-amount: 16
+  gapples:
+    material: GOLDEN_APPLE
+    max-amount: 16
+  webs:
+    material: COBWEB
+    max-amount: 64

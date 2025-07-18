@@ -1,7 +1,9 @@
 package host.plas.generalpvp.events;
 
+import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import host.plas.bou.utils.SenderUtils;
 import host.plas.generalpvp.GeneralPVP;
+import host.plas.generalpvp.data.PearlCooldown;
 import host.plas.generalpvp.items.StickyItem;
 import host.plas.generalpvp.utils.MainUtils;
 import org.bukkit.FluidCollisionMode;
@@ -203,5 +205,18 @@ public class MainListener extends AbstractConglomerate {
         if (! needToCancel.get()) return;
 
         event.setCancelled(true);
+    }
+
+    public void onPearl(PlayerLaunchProjectileEvent event) {
+        Projectile projectile = event.getProjectile();
+        if (! (projectile instanceof EnderPearl)) return;
+        Player player = event.getPlayer();
+
+        if (PearlCooldown.isOnCooldown(player)) {
+            event.setCancelled(true);
+            return;
+        } else {
+            PearlCooldown.addCooldown(player);
+        }
     }
 }
