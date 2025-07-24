@@ -10,6 +10,10 @@ bypass:
   item-check:
     # Permission to bypass item checks.
     permission: "generalpvp.bypass.item-check"
+  # Bypass item checks.
+  potion-check:
+    # Permission to bypass item checks.
+    permission: "generalpvp.bypass.potion-check"
 
 # Cooldown configurations.
 cooldowns:
@@ -35,3 +39,15 @@ items:
   webs:
     material: COBWEB
     max-amount: 64
+
+# Potion configurations.
+potions:
+  #strength:
+  #  type: STRENGTH
+  #  amplifier: -1 # -1 means any strength level
+  strength:
+    type: STRENGTH
+    amplifier: 2 # STRENGTH II+ is blocked
+  speed:
+    type: SPEED
+    amplifier: 2 # SPEED II+ is blocked

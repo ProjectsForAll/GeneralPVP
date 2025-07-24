@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.type.RespawnAnchor;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -27,7 +28,7 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainListener extends AbstractConglomerate {
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onRightClickBed(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Block block = event.getClickedBlock();
@@ -71,7 +72,7 @@ public class MainListener extends AbstractConglomerate {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onCrystalExplode(EntityExplodeEvent event) {
         Entity entity = event.getEntity();
         Location location = entity.getLocation();
@@ -83,7 +84,7 @@ public class MainListener extends AbstractConglomerate {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onAnchorExplode(BlockExplodeEvent event) {
         Block block = event.getBlock();
         Location location = block.getLocation();
@@ -93,7 +94,7 @@ public class MainListener extends AbstractConglomerate {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
         Item item = event.getItemDrop();
@@ -102,15 +103,21 @@ public class MainListener extends AbstractConglomerate {
         new StickyItem(stack);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPickUpItem(PlayerAttemptPickupItemEvent event) {
         Player player = event.getPlayer();
         Item item = event.getItem();
 
         AtomicBoolean needToCancel = new AtomicBoolean(false);
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(configuredItem -> {
+        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
             if (needToCancel.get()) return;
-            if (configuredItem.isCanAdd(player, item)) return;
+            if (r.isCanAdd(player, item)) return;
+
+            needToCancel.set(true);
+        });
+        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
+            if (needToCancel.get()) return;
+            if (r.isCanAdd(player, item)) return;
 
             needToCancel.set(true);
         });
@@ -120,7 +127,7 @@ public class MainListener extends AbstractConglomerate {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onMoveItem(InventoryMoveItemEvent event) {
         Inventory inventory = event.getDestination();
         if (! (inventory instanceof PlayerInventory)) return;
@@ -130,9 +137,15 @@ public class MainListener extends AbstractConglomerate {
         ItemStack item = event.getItem();
 
         AtomicBoolean needToCancel = new AtomicBoolean(false);
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(configuredItem -> {
+        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
             if (needToCancel.get()) return;
-            if (configuredItem.isCanAdd(player, item)) return;
+            if (r.isCanAdd(player, item)) return;
+
+            needToCancel.set(true);
+        });
+        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
+            if (needToCancel.get()) return;
+            if (r.isCanAdd(player, item)) return;
 
             needToCancel.set(true);
         });
@@ -142,15 +155,13 @@ public class MainListener extends AbstractConglomerate {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onMoveItem(InventoryClickEvent event) {
         HumanEntity humanEntity = event.getWhoClicked();
         PlayerInventory pi = humanEntity.getInventory();
         ClickType clickType = event.getClick();
         Inventory iiq = event.getInventory();
         boolean onCursor = false;
-
-        if (event.getSlotType() == InventoryType.SlotType.QUICKBAR) return; // If hotbar slot is clicked, return.
 
         switch (clickType) {
             case LEFT:
@@ -195,9 +206,15 @@ public class MainListener extends AbstractConglomerate {
 
         AtomicBoolean needToCancel = new AtomicBoolean(false);
         ItemStack finalItem = item;
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(configuredItem -> {
+        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
             if (needToCancel.get()) return;
-            if (configuredItem.isCanAdd(player, finalItem)) return;
+            if (r.isCanAdd(player, finalItem)) return;
+
+            needToCancel.set(true);
+        });
+        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
+            if (needToCancel.get()) return;
+            if (r.isCanAdd(player, finalItem)) return;
 
             needToCancel.set(true);
         });
@@ -207,6 +224,7 @@ public class MainListener extends AbstractConglomerate {
         event.setCancelled(true);
     }
 
+    @EventHandler(ignoreCancelled = true)
     public void onPearl(PlayerLaunchProjectileEvent event) {
         Projectile projectile = event.getProjectile();
         if (! (projectile instanceof EnderPearl)) return;

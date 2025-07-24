@@ -41,9 +41,10 @@ public class ConfiguredItem implements Identifiable {
         AtomicBoolean dropped = new AtomicBoolean(false);
         AtomicInteger amount = new AtomicInteger(0);
 
-        if ((this.getMaterial() == Material.ENCHANTED_GOLDEN_APPLE || this.getMaterial() == Material.GOLDEN_APPLE) && GeneralPVP.getMainConfig().isAllGoldenApplesSame()) {
+        if (GeneralPVP.getMainConfig().isAllGoldenApplesSame() &&
+                (this.getMaterial() == Material.ENCHANTED_GOLDEN_APPLE || this.getMaterial() == Material.GOLDEN_APPLE)) {
             inventory.all(Material.ENCHANTED_GOLDEN_APPLE).forEach((slot, item) -> {
-                if (item == null || item.getType() != material) return;
+                if (item == null || item.getType() != Material.ENCHANTED_GOLDEN_APPLE) return;
 
                 int beforeAmount = amount.get();
                 int currentAmount = item.getAmount();
@@ -67,7 +68,7 @@ public class ConfiguredItem implements Identifiable {
                 }
             });
             inventory.all(Material.GOLDEN_APPLE).forEach((slot, item) -> {
-                if (item == null || item.getType() != material) return;
+                if (item == null || item.getType() != Material.GOLDEN_APPLE) return;
 
                 int beforeAmount = amount.get();
                 int currentAmount = item.getAmount();
@@ -126,7 +127,6 @@ public class ConfiguredItem implements Identifiable {
                 }
             });
         }
-
 
         return dropped.get();
     }

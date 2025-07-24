@@ -15,6 +15,8 @@ public class PearlCooldown extends BaseDelayedRunnable {
     public PearlCooldown(long ticks, String ownUuid) {
         super(ticks);
         this.ownUuid = ownUuid;
+
+        register();
     }
 
     public PearlCooldown(String ownUuid) {

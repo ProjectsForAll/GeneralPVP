@@ -3,6 +3,7 @@ package host.plas.generalpvp.config;
 import gg.drak.thebase.storage.resources.flat.simple.SimpleConfiguration;
 import host.plas.generalpvp.GeneralPVP;
 import host.plas.generalpvp.config.bits.ConfiguredItem;
+import host.plas.generalpvp.config.bits.ConfiguredPotion;
 import org.bukkit.Material;
 
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -25,6 +26,9 @@ public class MainConfig extends SimpleConfiguration {
         getBypassItemCheckPermission();
 
         getPearlCooldown();
+
+        getPotionConfigurations();
+        getBypassPotionCheckPermission();
     }
 
     public boolean isAllowCrystalPVP() {
@@ -60,7 +64,7 @@ public class MainConfig extends SimpleConfiguration {
     public ConcurrentSkipListSet<ConfiguredItem> getItemConfigurations() {
         reloadResource();
 
-        ConcurrentSkipListSet<ConfiguredItem> items = new ConcurrentSkipListSet<>();
+        ConcurrentSkipListSet<ConfiguredItem> r = new ConcurrentSkipListSet<>();
 
         singleLayerKeySet("items").forEach(key -> {
             if (key.equals("drop-excess")) return; // Skip the drop-excess key
@@ -72,13 +76,13 @@ public class MainConfig extends SimpleConfiguration {
 
             try {
                 Material material = Material.valueOf(materialName.toUpperCase());
-                items.add(new ConfiguredItem(identifier, material, maxAmount));
+                r.add(new ConfiguredItem(identifier, material, maxAmount));
             } catch (IllegalArgumentException e) {
                 GeneralPVP.getInstance().getLogger().warning("Invalid material '" + materialName + "' for item '" + identifier + "'");
             }
         });
 
-        return items;
+        return r;
     }
 
     public String getBypassItemCheckPermission() {
@@ -87,9 +91,35 @@ public class MainConfig extends SimpleConfiguration {
         return getOrSetDefault("bypass.item-check.permission", "generalpvp.bypass.item-check");
     }
 
+    public String getBypassPotionCheckPermission() {
+        reloadResource();
+
+        return getOrSetDefault("bypass.potion-check.permission", "generalpvp.bypass.potion-check");
+    }
+
     public long getPearlCooldown() {
         reloadResource();
 
         return getOrSetDefault("cooldowns.pearl", 20 * 15L); // Default to 5 seconds
+    }
+
+    public ConcurrentSkipListSet<ConfiguredPotion> getPotionConfigurations() {
+        reloadResource();
+
+        ConcurrentSkipListSet<ConfiguredPotion> r = new ConcurrentSkipListSet<>();
+
+        singleLayerKeySet("potions").forEach(key -> {
+            try {
+                String identifier = key;
+                String typeStr = getOrSetDefault("items." + key + ".type", "STRENGTH");
+                int amplifier = getOrSetDefault("items." + key + ".amplifier", 2);
+
+                r.add(new ConfiguredPotion(identifier, typeStr, amplifier));
+            } catch (Throwable e) {
+                GeneralPVP.getInstance().getLogger().warning("Invalid potion type for item '" + key + "': " + e.getMessage());
+            }
+        });
+
+        return r;
     }
 }
