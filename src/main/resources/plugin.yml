@@ -11,3 +11,10 @@ depend:
   - BukkitOfUtils
 
 api-version: '1.21'
+
+commands:
+  gpvpreload:
+    description: "Reload the GeneralPvP plugin"
+    aliases:
+      - gpvpr
+    permission: generalpvp.commands.reload

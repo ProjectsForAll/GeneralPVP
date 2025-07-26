@@ -1,8 +1,7 @@
 package host.plas.generalpvp.timers;
 
 import host.plas.bou.scheduling.BaseRunnable;
-import host.plas.bou.scheduling.TaskManager;
-import host.plas.generalpvp.GeneralPVP;
+import host.plas.generalpvp.utils.ItemUtils;
 import org.bukkit.Bukkit;
 
 public class InventoryTimer extends BaseRunnable {
@@ -12,12 +11,6 @@ public class InventoryTimer extends BaseRunnable {
 
     @Override
     public void run() {
-        Bukkit.getOnlinePlayers().forEach(player -> {
-            TaskManager.runTask(player, () -> {
-                GeneralPVP.getMainConfig().getItemConfigurations().forEach(configuredItem -> {
-                    configuredItem.checkAndDrop(player);
-                });
-            });
-        });
+        Bukkit.getOnlinePlayers().forEach(ItemUtils::checkItemFromInventory);
     }
 }

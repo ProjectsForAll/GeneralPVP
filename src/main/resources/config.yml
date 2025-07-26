@@ -10,10 +10,14 @@ bypass:
   item-check:
     # Permission to bypass item checks.
     permission: "generalpvp.bypass.item-check"
-  # Bypass item checks.
+  # Bypass potion checks.
   potion-check:
-    # Permission to bypass item checks.
+    # Permission to bypass potion checks.
     permission: "generalpvp.bypass.potion-check"
+  # Bypass enchantment checks.
+  enchantment-check:
+    # Permission to bypass enchantment checks.
+    permission: "generalpvp.bypass.enchantment-check"
 
 # Cooldown configurations.
 cooldowns:
@@ -47,7 +51,13 @@ potions:
   #  amplifier: -1 # -1 means any strength level
   strength:
     type: STRENGTH
-    amplifier: 2 # STRENGTH II+ is blocked
+    amplifier: 2 # STRENGTH II and above is blocked
   speed:
-    type: SPEED
-    amplifier: 2 # SPEED II+ is blocked
+    type: SWIFTNESS
+    amplifier: 2 # SPEED II and above is blocked
+
+# Enchantment configurations.
+enchantments:
+  protection:
+    type: "protection"
+    amplifier: 4 # PROTECTION IV and above is blocked

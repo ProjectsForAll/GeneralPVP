@@ -10,11 +10,11 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -38,11 +38,11 @@ public class ConfiguredPotion implements Identifiable {
         this.amplifier = amplifier;
     }
 
-    public boolean checkAndDropAndClear(Player player) {
+    public boolean checkAndDropAndClear(HumanEntity player) {
         return checkEffects(player) || checkInventory(player);
     }
 
-    public boolean checkEffects(Player player) {
+    public boolean checkEffects(HumanEntity player) {
         if (player == null) return false;
         if (player.hasPermission(GeneralPVP.getMainConfig().getBypassPotionCheckPermission())) return true;
 
@@ -73,7 +73,7 @@ public class ConfiguredPotion implements Identifiable {
         return needsRemoval.get();
     }
 
-    public boolean checkInventory(Player player) {
+    public boolean checkInventory(HumanEntity player) {
         if (player == null) return false;
         if (player.hasPermission(GeneralPVP.getMainConfig().getBypassPotionCheckPermission())) return true;
 
@@ -81,18 +81,15 @@ public class ConfiguredPotion implements Identifiable {
 
         ConcurrentSkipListMap<Integer, ItemStack> toSet = new ConcurrentSkipListMap<>();
 
-        AtomicBoolean dropped = new AtomicBoolean(false);
+        AtomicBoolean found = new AtomicBoolean(false);
         AtomicInteger amount = new AtomicInteger(0);
 
         inventory.all(Material.POTION).forEach((slot, item) -> {
-            if (! isOfOwnType(item)) return;
+            ItemStack newStack = updateStack(item);
 
-            int amountInSlot = item.getAmount();
+            toSet.put(slot, newStack);
 
-            handleDropExcess(player, item, amountInSlot);
-
-            dropped.set(true);
-            toSet.put(slot, new ItemStack(Material.AIR));
+            found.set(true);
         });
 
         if (! toSet.isEmpty()) {
@@ -105,12 +102,12 @@ public class ConfiguredPotion implements Identifiable {
             });
         }
 
-        return dropped.get();
+        return found.get();
     }
 
     public PotionEffectType asEffectType() {
         try {
-            if (isProbablyPotionType()) {
+            if (isDefaultType()) {
                 PotionType ownType = this.asPotionType();
                 if (ownType == null) return null;
 
@@ -136,32 +133,8 @@ public class ConfiguredPotion implements Identifiable {
         }
     }
 
-    public boolean isProbablyPotionType() {
+    public boolean isDefaultType() {
         return ! getType().contains(":");
-    }
-
-    public static boolean isDropExcess() {
-        return GeneralPVP.getMainConfig().isDropExcess();
-    }
-
-    public static void handleDropExcess(Player player, ItemStack stack, int excessAmount) {
-        if (! isDropExcess()) return;
-        if (stack == null || stack.getType() == Material.AIR) return;
-        if (excessAmount <= 0) return;
-
-        if (ItemManager.has(stack)) return; // Delete the item if player is duping it.
-
-        Location location = player.getLocation();
-        ItemStack excessItem = stack.clone();
-        excessItem.setAmount(excessAmount);
-        Item item = location.getWorld().dropItemNaturally(location, excessItem);
-//        item.setCanMobPickup(false);
-//        item.setCanPlayerPickup(false);
-
-//        TaskManager.runTaskLater(item, () -> {
-//            item.setCanMobPickup(true);
-//            item.setCanPlayerPickup(true);
-//        }, 20L * 2); // 2-second delay
     }
 
     public int getCurrentAmount(HumanEntity player) {
@@ -180,12 +153,15 @@ public class ConfiguredPotion implements Identifiable {
 
     public boolean isCanAdd(HumanEntity player, ItemStack stack) {
         if (player == null) return false;
-        if (player.hasPermission(GeneralPVP.getMainConfig().getBypassItemCheckPermission())) return true;
+        if (player.hasPermission(GeneralPVP.getMainConfig().getBypassPotionCheckPermission())) return true;
 
         if (stack == null || stack.getType() == Material.AIR) return true;
         if (stack.getType() != Material.POTION) return true;
 
-        return ! isOfOwnType(stack);
+        if (! isOfOwnType(stack)) return true;
+
+        updateSingle(stack);
+        return true;
     }
 
     public boolean isCanAdd(HumanEntity player, Item item) {
@@ -199,7 +175,7 @@ public class ConfiguredPotion implements Identifiable {
         if (! (meta instanceof PotionMeta)) return false;
         PotionMeta potionMeta = (PotionMeta) meta;
         PotionType pt = potionMeta.getBasePotionType();
-        if (isProbablyPotionType()) {
+        if (isDefaultType()) {
             PotionType ownType = this.asPotionType();
             return ownType != null && ownType.equals(pt);
         } else {
@@ -207,6 +183,67 @@ public class ConfiguredPotion implements Identifiable {
             PotionEffectType ownType = this.asEffectType();
             if (ownType == null) return false;
             return effects.stream().anyMatch(effect -> effect.getType().equals(ownType));
+        }
+    }
+
+    public ItemStack updateStack(ItemStack item) {
+        ItemStack newItem = item.clone();
+
+        updateSingle(newItem);
+
+        return newItem;
+    }
+
+    public void updateSingle(ItemStack item) {
+        if (item == null || item.getType() != Material.POTION) return;
+
+        int newAmplifier = this.getAmplifier() - 1 - 1; // -1 because amplifier is 0-based
+
+        ItemMeta meta = item.getItemMeta();
+        if (! (meta instanceof PotionMeta)) return;
+        PotionMeta potionMeta = (PotionMeta) meta;
+        if (potionMeta.hasCustomEffects()) {
+            List<PotionEffect> effects = new ArrayList<>(potionMeta.getCustomEffects());
+            List<PotionEffect> newEffects = new ArrayList<>();
+            effects.forEach(effect -> {
+                if (!asEffectType().equals(effect.getType())) newEffects.add(effect);
+
+                if (effect.getAmplifier() + 1 >= this.getAmplifier()) { // +1 because amplifier is 0-based
+                    if (newAmplifier < 0) return; // Remove the effect completely // is 0-based
+
+                    PotionEffect newEffect = new PotionEffect(effect.getType(), effect.getDuration(), newAmplifier); // double -1 because amplifier is 0-based
+                    newEffects.add(newEffect);
+                }
+            });
+
+            if (newEffects.isEmpty()) {
+                // Remove the item completely
+                item.setType(Material.AIR);
+                item.setAmount(0);
+            } else {
+                potionMeta.clearCustomEffects();
+                newEffects.forEach(effect -> {
+                    potionMeta.addCustomEffect(effect, true);
+                });
+                item.setItemMeta(potionMeta);
+            }
+        } else {
+            PotionType ownType = this.asPotionType();
+            if (ownType == null) return;
+
+            if (ownType.equals(potionMeta.getBasePotionType())) {
+                // Update the amplifier
+                potionMeta.setBasePotionType(ownType);
+                potionMeta.setMainEffect(asEffectType());
+
+                PotionData potionData = potionMeta.getBasePotionData();
+                boolean isUpgraded = newAmplifier > 0;
+
+                PotionData newPotionData = new PotionData(ownType, potionData.isExtended(), isUpgraded);
+                potionMeta.setBasePotionData(newPotionData);
+
+                item.setItemMeta(potionMeta);
+            }
         }
     }
 }

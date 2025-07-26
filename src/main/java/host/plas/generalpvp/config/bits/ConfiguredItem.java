@@ -2,14 +2,12 @@ package host.plas.generalpvp.config.bits;
 
 import gg.drak.thebase.objects.Identifiable;
 import host.plas.generalpvp.GeneralPVP;
-import host.plas.generalpvp.items.ItemManager;
+import host.plas.generalpvp.utils.InvUtils;
 import lombok.Getter;
 import lombok.Setter;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -30,7 +28,7 @@ public class ConfiguredItem implements Identifiable {
         this.maxAmount = maxAmount;
     }
 
-    public boolean checkAndDrop(Player player) {
+    public boolean checkAndDrop(HumanEntity player) {
         if (player == null) return false;
         if (player.hasPermission(GeneralPVP.getMainConfig().getBypassItemCheckPermission())) return true;
 
@@ -43,116 +41,17 @@ public class ConfiguredItem implements Identifiable {
 
         if (GeneralPVP.getMainConfig().isAllGoldenApplesSame() &&
                 (this.getMaterial() == Material.ENCHANTED_GOLDEN_APPLE || this.getMaterial() == Material.GOLDEN_APPLE)) {
-            inventory.all(Material.ENCHANTED_GOLDEN_APPLE).forEach((slot, item) -> {
-                if (item == null || item.getType() != Material.ENCHANTED_GOLDEN_APPLE) return;
-
-                int beforeAmount = amount.get();
-                int currentAmount = item.getAmount();
-                int newAmount = beforeAmount + currentAmount;
-
-                if (newAmount > this.getMaxAmount()) {
-                    int excessAmount = newAmount - this.getMaxAmount();
-                    int keepAmount = currentAmount - excessAmount;
-
-                    handleDropExcess(player, item, newAmount - maxAmount);
-                    if (keepAmount > 0) {
-                        item.setAmount(keepAmount);
-                        toSet.put(slot, item);
-                    } else {
-                        toSet.put(slot, new ItemStack(Material.AIR));
-                    }
-
-                    dropped.set(true);
-                } else {
-                    amount.set(newAmount);
-                }
-            });
-            inventory.all(Material.GOLDEN_APPLE).forEach((slot, item) -> {
-                if (item == null || item.getType() != Material.GOLDEN_APPLE) return;
-
-                int beforeAmount = amount.get();
-                int currentAmount = item.getAmount();
-                int newAmount = beforeAmount + currentAmount;
-
-                if (newAmount > this.getMaxAmount()) {
-                    int excessAmount = newAmount - this.getMaxAmount();
-                    int keepAmount = currentAmount - excessAmount;
-
-                    handleDropExcess(player, item, newAmount - maxAmount);
-                    if (keepAmount > 0) {
-                        item.setAmount(keepAmount);
-                        toSet.put(slot, item);
-                    } else {
-                        toSet.put(slot, new ItemStack(Material.AIR));
-                    }
-
-                    dropped.set(true);
-                } else {
-                    amount.set(newAmount);
-                }
-            });
+            InvUtils.handleInventory(inventory, toSet, dropped, amount, player, Material.GOLDEN_APPLE, this.getMaxAmount());
+            InvUtils.handleInventory(inventory, toSet, dropped, amount, player, Material.ENCHANTED_GOLDEN_APPLE, this.getMaxAmount());
         } else {
-            inventory.all(this.getMaterial()).forEach((slot, item) -> {
-                if (item == null || item.getType() != material) return;
-
-                int beforeAmount = amount.get();
-                int currentAmount = item.getAmount();
-                int newAmount = beforeAmount + currentAmount;
-
-                if (newAmount > this.getMaxAmount()) {
-                    int excessAmount = newAmount - this.getMaxAmount();
-                    int keepAmount = currentAmount - excessAmount;
-
-                    handleDropExcess(player, item, newAmount - maxAmount);
-                    if (keepAmount > 0) {
-                        item.setAmount(keepAmount);
-                        toSet.put(slot, item);
-                    } else {
-                        toSet.put(slot, new ItemStack(Material.AIR));
-                    }
-
-                    dropped.set(true);
-                } else {
-                    amount.set(newAmount);
-                }
-            });
+            InvUtils.handleInventory(inventory, toSet, dropped, amount, player, this.getMaterial(), this.getMaxAmount());
         }
 
         if (! toSet.isEmpty()) {
-            toSet.forEach((slot, item) -> {
-                if (item == null || item.getType() == Material.AIR) {
-                    inventory.setItem(slot, new ItemStack(Material.AIR));
-                } else {
-                    inventory.setItem(slot, item);
-                }
-            });
+            InvUtils.handleToSet(toSet, inventory);
         }
 
         return dropped.get();
-    }
-
-    public static boolean isDropExcess() {
-        return GeneralPVP.getMainConfig().isDropExcess();
-    }
-
-    public static void handleDropExcess(Player player, ItemStack stack, int excessAmount) {
-        if (! isDropExcess()) return;
-        if (stack == null || stack.getType() == Material.AIR) return;
-        if (excessAmount <= 0) return;
-
-        if (ItemManager.has(stack)) return; // Delete the item if player is duping it.
-
-        Location location = player.getLocation();
-        ItemStack excessItem = stack.clone();
-        excessItem.setAmount(excessAmount);
-        Item item = location.getWorld().dropItemNaturally(location, excessItem);
-//        item.setCanMobPickup(false);
-//        item.setCanPlayerPickup(false);
-
-//        TaskManager.runTaskLater(item, () -> {
-//            item.setCanMobPickup(true);
-//            item.setCanPlayerPickup(true);
-//        }, 20L * 2); // 2-second delay
     }
 
     public int getCurrentAmount(HumanEntity player) {

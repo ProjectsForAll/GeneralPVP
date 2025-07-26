@@ -5,9 +5,11 @@ import host.plas.bou.utils.SenderUtils;
 import host.plas.generalpvp.GeneralPVP;
 import host.plas.generalpvp.data.PearlCooldown;
 import host.plas.generalpvp.items.StickyItem;
+import host.plas.generalpvp.utils.ItemUtils;
 import host.plas.generalpvp.utils.MainUtils;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.RespawnAnchor;
@@ -21,6 +23,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerAttemptPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -108,21 +111,8 @@ public class MainListener extends AbstractConglomerate {
         Player player = event.getPlayer();
         Item item = event.getItem();
 
-        AtomicBoolean needToCancel = new AtomicBoolean(false);
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, item)) return;
-
-            needToCancel.set(true);
-        });
-        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, item)) return;
-
-            needToCancel.set(true);
-        });
-
-        if (! needToCancel.get()) return;
+        boolean needToCancel = ItemUtils.checkItem(player, item.getItemStack());
+        if (! needToCancel) return;
 
         event.setCancelled(true);
     }
@@ -136,21 +126,8 @@ public class MainListener extends AbstractConglomerate {
 
         ItemStack item = event.getItem();
 
-        AtomicBoolean needToCancel = new AtomicBoolean(false);
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, item)) return;
-
-            needToCancel.set(true);
-        });
-        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, item)) return;
-
-            needToCancel.set(true);
-        });
-
-        if (! needToCancel.get()) return;
+        boolean needToCancel = ItemUtils.checkItem(player, item);
+        if (! needToCancel) return;
 
         event.setCancelled(true);
     }
@@ -204,22 +181,8 @@ public class MainListener extends AbstractConglomerate {
             item = event.getCurrentItem();
         }
 
-        AtomicBoolean needToCancel = new AtomicBoolean(false);
-        ItemStack finalItem = item;
-        GeneralPVP.getMainConfig().getItemConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, finalItem)) return;
-
-            needToCancel.set(true);
-        });
-        GeneralPVP.getMainConfig().getPotionConfigurations().forEach(r -> {
-            if (needToCancel.get()) return;
-            if (r.isCanAdd(player, finalItem)) return;
-
-            needToCancel.set(true);
-        });
-
-        if (! needToCancel.get()) return;
+        boolean needToCancel = ItemUtils.checkItem(player, item);
+        if (! needToCancel) return;
 
         event.setCancelled(true);
     }
@@ -236,5 +199,14 @@ public class MainListener extends AbstractConglomerate {
         } else {
             PearlCooldown.addCooldown(player);
         }
+
+        player.setCooldown(Material.ENDER_PEARL, (int) GeneralPVP.getMainConfig().getPearlCooldown());
+    }
+
+    @EventHandler
+    public void onLogin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+
     }
 }

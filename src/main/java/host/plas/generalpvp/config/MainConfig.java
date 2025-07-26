@@ -2,6 +2,7 @@ package host.plas.generalpvp.config;
 
 import gg.drak.thebase.storage.resources.flat.simple.SimpleConfiguration;
 import host.plas.generalpvp.GeneralPVP;
+import host.plas.generalpvp.config.bits.ConfiguredEnchantment;
 import host.plas.generalpvp.config.bits.ConfiguredItem;
 import host.plas.generalpvp.config.bits.ConfiguredPotion;
 import org.bukkit.Material;
@@ -29,6 +30,9 @@ public class MainConfig extends SimpleConfiguration {
 
         getPotionConfigurations();
         getBypassPotionCheckPermission();
+
+        getBypassEnchantmentCheckPermission();
+        getEnchantmentConfigurations();
     }
 
     public boolean isAllowCrystalPVP() {
@@ -97,6 +101,12 @@ public class MainConfig extends SimpleConfiguration {
         return getOrSetDefault("bypass.potion-check.permission", "generalpvp.bypass.potion-check");
     }
 
+    public String getBypassEnchantmentCheckPermission() {
+        reloadResource();
+
+        return getOrSetDefault("bypass.enchantment-check.permission", "generalpvp.bypass.enchantment-check");
+    }
+
     public long getPearlCooldown() {
         reloadResource();
 
@@ -108,13 +118,37 @@ public class MainConfig extends SimpleConfiguration {
 
         ConcurrentSkipListSet<ConfiguredPotion> r = new ConcurrentSkipListSet<>();
 
-        singleLayerKeySet("potions").forEach(key -> {
+        String mainKey = "potions";
+
+        singleLayerKeySet(mainKey).forEach(key -> {
             try {
                 String identifier = key;
-                String typeStr = getOrSetDefault("items." + key + ".type", "STRENGTH");
-                int amplifier = getOrSetDefault("items." + key + ".amplifier", 2);
+                String typeStr = getOrSetDefault(mainKey + "." + key + ".type", "STRENGTH");
+                int amplifier = getOrSetDefault(mainKey + "." + key + ".amplifier", 2);
 
                 r.add(new ConfiguredPotion(identifier, typeStr, amplifier));
+            } catch (Throwable e) {
+                GeneralPVP.getInstance().getLogger().warning("Invalid potion type for item '" + key + "': " + e.getMessage());
+            }
+        });
+
+        return r;
+    }
+
+    public ConcurrentSkipListSet<ConfiguredEnchantment> getEnchantmentConfigurations() {
+        reloadResource();
+
+        ConcurrentSkipListSet<ConfiguredEnchantment> r = new ConcurrentSkipListSet<>();
+
+        String mainKey = "enchantments";
+
+        singleLayerKeySet(mainKey).forEach(key -> {
+            try {
+                String identifier = key;
+                String typeStr = getOrSetDefault(mainKey + "." + key + ".type", "PROTECTION");
+                int amplifier = getOrSetDefault(mainKey + "." + key + ".amplifier", 4);
+
+                r.add(new ConfiguredEnchantment(identifier, typeStr, amplifier));
             } catch (Throwable e) {
                 GeneralPVP.getInstance().getLogger().warning("Invalid potion type for item '" + key + "': " + e.getMessage());
             }

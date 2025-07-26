@@ -1,6 +1,7 @@
 package host.plas.generalpvp;
 
 import host.plas.bou.BetterPlugin;
+import host.plas.generalpvp.commands.ReloadCMD;
 import host.plas.generalpvp.config.MainConfig;
 import host.plas.generalpvp.events.MainListener;
 import host.plas.generalpvp.timers.InventoryTimer;
@@ -20,6 +21,9 @@ public final class GeneralPVP extends BetterPlugin {
     @Getter @Setter
     private static InventoryTimer inventoryTimer;
 
+    @Getter @Setter
+    private static ReloadCMD reloadCMD;
+
     public GeneralPVP() {
         super();
     }
@@ -34,6 +38,8 @@ public final class GeneralPVP extends BetterPlugin {
         setMainListener(new MainListener());
 
         setInventoryTimer(new InventoryTimer());
+
+        setReloadCMD(new ReloadCMD());
     }
 
     @Override
