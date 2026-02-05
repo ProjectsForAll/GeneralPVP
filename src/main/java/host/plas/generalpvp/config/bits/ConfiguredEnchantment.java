@@ -68,20 +68,6 @@ public class ConfiguredEnchantment implements Identifiable {
         return ! getType().contains(":");
     }
 
-    public int getCurrentAmount(HumanEntity player) {
-        PlayerInventory inventory = player.getInventory();
-        AtomicInteger amount = new AtomicInteger(0);
-
-        inventory.forEach(item -> {
-            if (! hasEnchantmentWithAmplifier(item)) return;
-
-            int amountInSlot = item.getAmount();
-            amount.addAndGet(amountInSlot);
-        });
-
-        return amount.get();
-    }
-
     public boolean isCanAdd(HumanEntity player, ItemStack stack) {
         if (player == null) return false;
         if (player.hasPermission(GeneralPVP.getMainConfig().getBypassEnchantmentCheckPermission())) return true;

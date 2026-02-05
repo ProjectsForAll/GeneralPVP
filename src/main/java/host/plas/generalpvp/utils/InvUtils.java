@@ -19,7 +19,6 @@ public class InvUtils {
         return 4 * 9; // 4 rows of 9 slots each
     }
 
-
     public static void forItem(ItemStack item, ConcurrentSkipListMap<Integer, ItemStack> toSet, AtomicBoolean dropped,
                                AtomicInteger amount, EquipmentSlot slot, HumanEntity player, Material check, int maxAmount) {
         forItem(item, toSet, dropped, amount, getSlot(slot), player, check, maxAmount);
@@ -127,34 +126,70 @@ public class InvUtils {
                     } else {
                         inventory.setItem(s, item);
                     }
-                }
-
-                if (item == null || item.getType() == Material.AIR) {
-                    inventory.setItem(slot, new ItemStack(Material.AIR));
                 } else {
-                    inventory.setItem(slot, item);
+                    if (item == null || item.getType() == Material.AIR) {
+                        inventory.setItem(slot, new ItemStack(Material.AIR));
+                    } else {
+                        inventory.setItem(slot, item);
+                    }
                 }
             });
         }
     }
 
     public static void handleInventory(PlayerInventory inventory, ConcurrentSkipListMap<Integer, ItemStack> toSet,
-                              AtomicBoolean dropped, AtomicInteger amount, HumanEntity player, Material material, int maxAmount) {
-        inventory.all(material).forEach((slot, item) -> {
-            InvUtils.forItem(item, toSet, dropped, amount, slot, player, material, maxAmount);
-        });
-
+                                       AtomicBoolean dropped, AtomicInteger amount, HumanEntity player, Material material, int maxAmount) {
         ItemStack offHand = inventory.getItemInOffHand();
-        InvUtils.forItem(offHand, toSet, dropped, amount, EquipmentSlot.OFF_HAND, player, material, maxAmount);
+        forItem(offHand, toSet, dropped, amount, EquipmentSlot.OFF_HAND, player, material, maxAmount);
 
         ItemStack helmet = inventory.getHelmet();
         ItemStack chestplate = inventory.getChestplate();
         ItemStack leggings = inventory.getLeggings();
         ItemStack boots = inventory.getBoots();
 
-        InvUtils.forItem(helmet, toSet, dropped, amount, EquipmentSlot.HEAD, player, material, maxAmount);
-        InvUtils.forItem(chestplate, toSet, dropped, amount, EquipmentSlot.CHEST, player, material, maxAmount);
-        InvUtils.forItem(leggings, toSet, dropped, amount, EquipmentSlot.LEGS, player, material, maxAmount);
-        InvUtils.forItem(boots, toSet, dropped, amount, EquipmentSlot.FEET, player, material, maxAmount);
+        forItem(helmet, toSet, dropped, amount, EquipmentSlot.HEAD, player, material, maxAmount);
+        forItem(chestplate, toSet, dropped, amount, EquipmentSlot.CHEST, player, material, maxAmount);
+        forItem(leggings, toSet, dropped, amount, EquipmentSlot.LEGS, player, material, maxAmount);
+        forItem(boots, toSet, dropped, amount, EquipmentSlot.FEET, player, material, maxAmount);
+
+        inventory.all(material).forEach((slot, item) -> {
+            forItem(item, toSet, dropped, amount, slot, player, material, maxAmount);
+        });
+    }
+
+    public static AtomicInteger countItem(ItemStack item, EquipmentSlot slot, HumanEntity player, AtomicInteger amount, Material check) {
+        return countItem(item, getSlot(slot), player, amount, check);
+    }
+
+    public static AtomicInteger countItem(ItemStack item, int slot, HumanEntity player, AtomicInteger amount, Material check) {
+        if (item == null || item.getType() != check) return amount;
+
+        int currentAmount = item.getAmount();
+        amount.getAndAdd(currentAmount);
+
+        return amount;
+    }
+
+    public static int getCount(PlayerInventory inventory, HumanEntity player, Material material) {
+        AtomicInteger amount = new AtomicInteger(0);
+
+        ItemStack offHand = inventory.getItemInOffHand();
+        countItem(offHand, EquipmentSlot.OFF_HAND, player, amount, material);
+
+        ItemStack helmet = inventory.getHelmet();
+        ItemStack chestplate = inventory.getChestplate();
+        ItemStack leggings = inventory.getLeggings();
+        ItemStack boots = inventory.getBoots();
+
+        countItem(helmet, EquipmentSlot.HEAD, player, amount, material);
+        countItem(chestplate, EquipmentSlot.CHEST, player, amount, material);
+        countItem(leggings, EquipmentSlot.LEGS, player, amount, material);
+        countItem(boots, EquipmentSlot.FEET, player, amount, material);
+
+        inventory.all(material).forEach((slot, item) -> {
+            countItem(item, slot, player, amount, material);
+        });
+
+        return amount.get();
     }
 }

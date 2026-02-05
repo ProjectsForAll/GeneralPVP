@@ -53,6 +53,24 @@ public class MainConfig extends SimpleConfiguration {
         return getOrSetDefault("allow.anchor-pvp", false);
     }
 
+    public void setAllowCrystalPVP(boolean allow) {
+        reloadResource();
+
+        write("allow.crystal-pvp", allow);
+    }
+
+    public void setAllowBedPVP(boolean allow) {
+        reloadResource();
+
+        write("allow.bed-pvp", allow);
+    }
+
+    public void setAllowAnchorPVP(boolean allow) {
+        reloadResource();
+
+        write("allow.anchor-pvp", allow);
+    }
+
     public boolean isDropExcess() {
         reloadResource();
 
@@ -155,5 +173,56 @@ public class MainConfig extends SimpleConfiguration {
         });
 
         return r;
+    }
+
+    public void setDropExcess(boolean drop) {
+        reloadResource();
+
+        write("items.drop-excess", drop);
+    }
+
+    public void setPearlCooldown(long ticks) {
+        reloadResource();
+
+        write("cooldowns.pearl", ticks);
+    }
+
+    public void addItemConfiguration(ConfiguredItem item) {
+        reloadResource();
+
+        write("items." + item.getIdentifier() + ".material", item.getMaterial().name());
+        write("items." + item.getIdentifier() + ".max-amount", item.getMaxAmount());
+    }
+
+    public void removeItemConfiguration(String identifier) {
+        reloadResource();
+
+        write("items." + identifier, null);
+    }
+
+    public void addPotionConfiguration(ConfiguredPotion potion) {
+        reloadResource();
+
+        write("potions." + potion.getIdentifier() + ".type", potion.getType());
+        write("potions." + potion.getIdentifier() + ".amplifier", potion.getAmplifier());
+    }
+
+    public void removePotionConfiguration(String identifier) {
+        reloadResource();
+
+        write("potions." + identifier, null);
+    }
+
+    public void addEnchantmentConfiguration(ConfiguredEnchantment enchantment) {
+        reloadResource();
+
+        write("enchantments." + enchantment.getIdentifier() + ".type", enchantment.getType());
+        write("enchantments." + enchantment.getIdentifier() + ".amplifier", enchantment.getAmplifier());
+    }
+
+    public void removeEnchantmentConfiguration(String identifier) {
+        reloadResource();
+
+        write("enchantments." + identifier, null);
     }
 }

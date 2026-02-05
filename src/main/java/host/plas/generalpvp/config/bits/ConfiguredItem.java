@@ -56,16 +56,7 @@ public class ConfiguredItem implements Identifiable {
 
     public int getCurrentAmount(HumanEntity player) {
         PlayerInventory inventory = player.getInventory();
-        AtomicInteger amount = new AtomicInteger(0);
-
-        inventory.all(this.getMaterial()).forEach((slot, item) -> {
-            if (item == null || item.getType() != material) return;
-
-            int currentAmount = item.getAmount();
-            amount.addAndGet(currentAmount);
-        });
-
-        return amount.get();
+        return InvUtils.getCount(inventory, player, this.getMaterial());
     }
 
     public boolean isCanAdd(HumanEntity player, ItemStack stack) {

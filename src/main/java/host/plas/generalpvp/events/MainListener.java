@@ -7,10 +7,7 @@ import host.plas.generalpvp.data.PearlCooldown;
 import host.plas.generalpvp.items.StickyItem;
 import host.plas.generalpvp.utils.ItemUtils;
 import host.plas.generalpvp.utils.MainUtils;
-import org.bukkit.FluidCollisionMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.RespawnAnchor;
 import org.bukkit.entity.*;
@@ -110,11 +107,41 @@ public class MainListener extends AbstractConglomerate {
     public void onPickUpItem(PlayerAttemptPickupItemEvent event) {
         Player player = event.getPlayer();
         Item item = event.getItem();
+        ItemStack itemStack = item.getItemStack();
 
-        boolean needToCancel = ItemUtils.checkItem(player, item.getItemStack());
-        if (! needToCancel) return;
+        boolean needToCancel = ItemUtils.checkItem(player, itemStack, true);
+        if (needToCancel) {
+            event.setCancelled(true);
+            return;
+        }
 
-        event.setCancelled(true);
+        int amount = ItemUtils.getPickUpStack(player, itemStack);
+        if (amount == -1) return;
+
+        if (amount <= 0 || player.getInventory().firstEmpty() == -1) {
+            event.setCancelled(true);
+            return;
+        }
+
+        if (amount < itemStack.getAmount()) { // split the stack
+            ItemStack toGet = itemStack.clone();
+            toGet.setAmount(amount);
+
+            ItemStack toLeave = itemStack.clone();
+            toLeave.setAmount(itemStack.getAmount() - amount);
+
+            item.setItemStack(toLeave);
+            player.getInventory().addItem(toGet);
+            player.getNearbyEntities(16, 16, 16).forEach(entity -> {
+                if (! (entity instanceof Player)) return;
+                Player p = (Player) entity;
+                p.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+            });
+
+            event.setCancelled(true);
+        } else {
+            // nothing as it is good to pick up
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -201,12 +228,5 @@ public class MainListener extends AbstractConglomerate {
         }
 
         player.setCooldown(Material.ENDER_PEARL, (int) GeneralPVP.getMainConfig().getPearlCooldown());
-    }
-
-    @EventHandler
-    public void onLogin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-
-
     }
 }

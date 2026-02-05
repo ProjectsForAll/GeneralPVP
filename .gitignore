@@ -114,10 +114,10 @@ gradle-app.setting
 # Common working directory
 run/
 
-/gradle/
-/.idea/
-/.gradle/
-/gradle/
+.gradle/
 
-/target/
-/.fastRequest/
+target/
+.fastRequest/
+
+.vscode/
+bin/

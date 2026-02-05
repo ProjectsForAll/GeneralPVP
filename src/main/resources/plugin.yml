@@ -18,3 +18,8 @@ commands:
     aliases:
       - gpvpr
     permission: generalpvp.commands.reload
+  gpvpmanage:
+    description: "Manage GeneralPvP settings"
+    aliases:
+      - gpvpm
+    permission: generalpvp.commands.manage
